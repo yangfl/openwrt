@@ -1,0 +1,25 @@
+diff --git a/drivers/net/dsa/Kconfig b/drivers/net/dsa/Kconfig
+index 4ab567c5bbaf..98e9bbe47de7 100644
+--- a/drivers/net/dsa/Kconfig
++++ b/drivers/net/dsa/Kconfig
+@@ -72,6 +72,8 @@ config NET_DSA_MV88E6060
+ 
+ source "drivers/net/dsa/microchip/Kconfig"
+ 
++source "drivers/net/dsa/motorcomm/Kconfig"
++
+ source "drivers/net/dsa/mv88e6xxx/Kconfig"
+ 
+ source "drivers/net/dsa/mxl862xx/Kconfig"
+diff --git a/drivers/net/dsa/Makefile b/drivers/net/dsa/Makefile
+index d2975badffc0..138225baa4d5 100644
+--- a/drivers/net/dsa/Makefile
++++ b/drivers/net/dsa/Makefile
+@@ -18,6 +18,7 @@  obj-y				+= b53/
+ obj-y				+= hirschmann/
+ obj-y				+= lantiq/
+ obj-y				+= microchip/
++obj-y				+= motorcomm/
+ obj-y				+= mv88e6xxx/
+ obj-y				+= mxl862xx/
+ obj-y				+= netc/

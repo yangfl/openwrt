@@ -1,0 +1,80 @@
+From 09e4d1298b367051b60d9b0a13b22e7d78e61803 Mon Sep 17 00:00:00 2001
+From: David Yang <mmyangfl@gmail.com>
+Date: Thu, 30 Apr 2026 19:45:24 +0800
+Subject: [PATCH] net: dsa: pass extack to dsa_switch_ops :: port_policer_add()
+
+Drivers might have error messages to propagate to user space. Propagate
+the netlink extack so that they can inform user space in a verbal way of
+their limitations.
+
+Make the according transformations to the two users (sja1105 and felix).
+
+Signed-off-by: David Yang <mmyangfl@gmail.com>
+Reviewed-by: Andrew Lunn <andrew@lunn.ch>
+Link: https://patch.msgid.link/20260430114529.3536911-2-mmyangfl@gmail.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+---
+ drivers/net/dsa/ocelot/felix.c         | 3 ++-
+ drivers/net/dsa/sja1105/sja1105_main.c | 3 ++-
+ include/net/dsa.h                      | 3 ++-
+ net/dsa/user.c                         | 2 +-
+ 4 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/dsa/ocelot/felix.c b/drivers/net/dsa/ocelot/felix.c
+index 84cf8e7fb17a..4272ea6e9ca8 100644
+--- a/drivers/net/dsa/ocelot/felix.c
++++ b/drivers/net/dsa/ocelot/felix.c
+@@ -2001,7 +2001,8 @@ static int felix_cls_flower_stats(struct dsa_switch *ds, int port,
+ }
+ 
+ static int felix_port_policer_add(struct dsa_switch *ds, int port,
+-				  const struct flow_action_police *policer)
++				  const struct flow_action_police *policer,
++				  struct netlink_ext_ack *extack)
+ {
+ 	struct ocelot *ocelot = ds->priv;
+ 	struct ocelot_policer pol = {
+diff --git a/drivers/net/dsa/sja1105/sja1105_main.c b/drivers/net/dsa/sja1105/sja1105_main.c
+index c72c2bfdcffb..dbfa45064747 100644
+--- a/drivers/net/dsa/sja1105/sja1105_main.c
++++ b/drivers/net/dsa/sja1105/sja1105_main.c
+@@ -2847,7 +2847,8 @@ static void sja1105_mirror_del(struct dsa_switch *ds, int port,
+ }
+ 
+ static int sja1105_port_policer_add(struct dsa_switch *ds, int port,
+-				    const struct flow_action_police *policer)
++				    const struct flow_action_police *policer,
++				    struct netlink_ext_ack *extack)
+ {
+ 	struct sja1105_l2_policing_entry *policing;
+ 	struct sja1105_private *priv = ds->priv;
+diff --git a/include/net/dsa.h b/include/net/dsa.h
+index 8b6d34e8a6f0..4cc67469cf2e 100644
+--- a/include/net/dsa.h
++++ b/include/net/dsa.h
+@@ -1122,7 +1122,8 @@ struct dsa_switch_ops {
+ 	void	(*port_mirror_del)(struct dsa_switch *ds, int port,
+ 				   struct dsa_mall_mirror_tc_entry *mirror);
+ 	int	(*port_policer_add)(struct dsa_switch *ds, int port,
+-				    const struct flow_action_police *policer);
++				    const struct flow_action_police *policer,
++				    struct netlink_ext_ack *extack);
+ 	void	(*port_policer_del)(struct dsa_switch *ds, int port);
+ 	int	(*port_setup_tc)(struct dsa_switch *ds, int port,
+ 				 enum tc_setup_type type, void *type_data);
+diff --git a/net/dsa/user.c b/net/dsa/user.c
+index c4bd6fe90b45..8704c1a3a5b7 100644
+--- a/net/dsa/user.c
++++ b/net/dsa/user.c
+@@ -1499,7 +1499,7 @@ dsa_user_add_cls_matchall_police(struct net_device *dev,
+ 	policer = &mall_tc_entry->policer;
+ 	*policer = act->police;
+ 
+-	err = ds->ops->port_policer_add(ds, dp->index, policer);
++	err = ds->ops->port_policer_add(ds, dp->index, policer, extack);
+ 	if (err) {
+ 		kfree(mall_tc_entry);
+ 		return err;
+-- 
+2.53.0
+
